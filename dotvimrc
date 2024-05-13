@@ -1,0 +1,158 @@
+" user: @zomby7e
+" This config file needs vim-plug https://github.com/junegunn/vim-plug
+
+" Line number and cursor location
+set nu
+set cul
+set cuc
+
+" Highlight search
+set hlsearch
+
+" Enable Mouse"
+set mouse=a
+set selection=exclusive
+set selectmode=mouse,key
+
+" Don't compat vi
+set nocompatible
+" Enable syntax highlighting
+syntax enable
+"Always show insert or command mode
+set showmode
+" Always show command
+set showcmd
+
+" File encoding: utf8
+set encoding=utf-8
+set fileencodings=utf-8,chinese,latin-1,gbk,gb18030,gk2312
+" Use Unix as the standard file type
+set ffs=unix,dos,mac
+" Avoid garbled text in menus and messages
+source $VIMRUNTIME/delmenu.vim
+source $VIMRUNTIME/menu.vim
+language messages en_US.utf-8
+
+" length of tab indentation 
+set tabstop=4
+" length of auto indentation 
+set shiftwidth=4
+" Auto and smart indent
+set autoindent
+set smartindent
+" Use spaces instead of tabs
+set expandtab
+" Be smart when using tabs
+set smarttab
+
+" Show matches for brackets
+set showmatch
+" Show tabs and spaces at end of lines
+set listchars=tab:»\ ,trail:·,nbsp:_
+set list
+" Show current cursor location and status bar
+set ruler
+set laststatus=2
+" Enable filetype detection plugin and indent
+filetype plugin indent on
+" Set to auto read when a file is changed from the outside
+set autoread
+au FocusGained,BufEnter * checktime
+" :W sudo saves the file
+" (useful for handling the permission-denied error)
+command! W execute 'w !sudo tee % > /dev/null' <bar> edit!
+" Turn on the Wild menu
+set wildmenu
+set wildmode=longest:list,full
+" Height of the command bar
+set cmdheight=1
+" A buffer becomes hidden when it is abandoned
+set hid
+" Ignore case when searching (to disable, use 'set noignorecase')
+set ignorecase
+" When searching try to be smart about cases
+set smartcase
+" Makes search act like search in modern browsers
+set incsearch
+" Don't redraw while executing macros (good performance config)
+set lazyredraw
+" For regular expressions turn magic on
+set magic
+" Set extra options when running in GUI mode
+if has("gui_running")
+	set guioptions-=T
+	set guioptions-=e
+	set t_Co=256
+	set guitablabel=%M\ %t
+endif
+" Turn backup off
+set nobackup
+set nowb
+set noswapfile
+
+" Use visual bell when error occurred
+set noerrorbells
+"set visualbell
+
+" Let 'tl' toggle between this and the last accessed tab
+let g:lasttab = 1
+nmap <leader>tl :exe "tabn ".g:lasttab<CR>
+au TabLeave * let g:lasttab = tabpagenr()
+
+" Disable scrollbars 
+set guioptions-=r
+set guioptions-=R
+set guioptions-=l
+set guioptions-=L
+
+"Auto shebangs
+func SetShebang(type)
+	let shebang="\#!/usr/bin/env " .. a:type
+	call setline(1, shebang)
+	if a:type == "python3"
+		call setline(2, "\# -*- coding=utf8 -*-")
+	endif
+	unlet shebang
+	normal G
+	normal o
+	normal o
+endfunc
+autocmd bufnewfile *.py call SetShebang("python3")
+autocmd bufnewfile *.pl call SetShebang("perl")
+autocmd bufnewfile *.sh call SetShebang("sh")
+autocmd bufnewfile *.csh call SetShebang("csh")
+autocmd bufnewfile *.bash call SetShebang("bash")
+autocmd bufnewfile *.lua call SetShebang("lua")
+autocmd bufnewfile *.php call SetShebang("php")
+
+
+set history=1000
+set backupdir=~/.vim/.backup//
+set directory=~/.vim/.swp//
+set undodir=~/.vim/.undo//
+
+" Enable ale auto completion before loaded it.
+let g:ale_completion_enabled = 1
+
+" Vim-Plug
+call plug#begin('~/.vim/plugged')
+Plug 'preservim/nerdtree'
+Plug 'dense-analysis/ale'
+Plug 'vim-airline/vim-airline'
+Plug 'jiangmiao/auto-pairs'
+Plug 'preservim/nerdcommenter'
+call plug#end()
+
+" ALE
+set omnifunc=ale#completion#OmniFunc
+let g:ale_linters = {
+\   'rust': ['analyzer'],
+\   'python': ['pylint']
+\}
+let g:ale_rust_analyzer_executable="/home/zomby7e/bin/rust-analyzer"
+nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
+let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines'] }
+let g:rustfmt_autosave = 1
+" Set this. Airline will handle the rest.
+let g:airline#extensions#ale#enabled = 1
+
