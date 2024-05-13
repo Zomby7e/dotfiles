@@ -18,7 +18,7 @@ set selectmode=mouse,key
 set nocompatible
 " Enable syntax highlighting
 syntax enable
-"Always show insert or command mode
+" Always show insert or command mode
 set showmode
 " Always show command
 set showcmd
@@ -105,26 +105,36 @@ set guioptions-=R
 set guioptions-=l
 set guioptions-=L
 
-"Auto shebangs
-func SetShebang(type)
-	let shebang="\#!/usr/bin/env " .. a:type
-	call setline(1, shebang)
-	if a:type == "python3"
-		call setline(2, "\# -*- coding=utf8 -*-")
-	endif
-	unlet shebang
-	normal G
-	normal o
-	normal o
-endfunc
-autocmd bufnewfile *.py call SetShebang("python3")
-autocmd bufnewfile *.pl call SetShebang("perl")
-autocmd bufnewfile *.sh call SetShebang("sh")
-autocmd bufnewfile *.csh call SetShebang("csh")
-autocmd bufnewfile *.bash call SetShebang("bash")
-autocmd bufnewfile *.lua call SetShebang("lua")
-autocmd bufnewfile *.php call SetShebang("php")
-
+" Function: set shebangs
+function! SetShebang(lang)
+    let simple_shells = ['bash', 'fish', 'sh', 'csh', 'zsh']
+    let shebang = ''
+    if index(simple_shells, a:lang) != -1
+        let shebang = '#!/usr/bin/env ' . a:lang
+    elseif a:lang == 'py' || a:lang == 'python' || a:lang == 'python3'
+        let shebang = '#!/usr/bin/env python3'
+    elseif a:lang == 'pl' || a:lang == 'perl'
+        let shebang = '#!/usr/bin/env perl'
+    elseif a:lang == 'js' || a:lang == 'javascript' || a:lang == 'node' || a:lang == 'nodejs'
+        let shebang = '#!/usr/bin/env node'
+    endif
+    if shebang != ''
+        let first_line = getline(1)
+        if first_line =~? '^#!'
+            silent! execute '1delete'
+        endif
+        call append(0, shebang)
+    else
+        echo "Unknown language"
+    endif
+endfunction
+" Add a command named Shebang
+command! -nargs=1 Shebang call SetShebang(<f-args>)
+" Auto Add Shebang for new files
+let supported_file_types = ['py', 'sh', 'fish', 'pl', 'csh', 'zsh']
+for ext in supported_file_types
+    execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
+endfor
 
 set history=1000
 set backupdir=~/.vim/.backup//
@@ -137,6 +147,7 @@ let g:ale_completion_enabled = 1
 " Vim-Plug
 call plug#begin('~/.vim/plugged')
 Plug 'preservim/nerdtree'
+Plug 'preservim/nerdcommenter'
 Plug 'dense-analysis/ale'
 Plug 'vim-airline/vim-airline'
 Plug 'jiangmiao/auto-pairs'
