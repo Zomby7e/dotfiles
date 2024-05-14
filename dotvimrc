@@ -136,6 +136,20 @@ for ext in supported_file_types
     execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
 endfor
 
+" If backup, swap and undo folder not exists, create them
+if !isdirectory(expand("~/.vim/.backup"))
+    call mkdir(expand("~/.vim/.backup"), "p")
+endif
+
+if !isdirectory(expand("~/.vim/.swp"))
+    call mkdir(expand("~/.vim/.swp"), "p")
+endif
+
+if !isdirectory(expand("~/.vim/.undo"))
+    call mkdir(expand("~/.vim/.undo"), "p")
+endif
+
+" Set History and folders
 set history=1000
 set backupdir=~/.vim/.backup//
 set directory=~/.vim/.swp//
