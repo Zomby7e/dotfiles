@@ -31,7 +31,7 @@ set ffs=unix,dos,mac
 " Avoid garbled text in menus and messages
 source $VIMRUNTIME/delmenu.vim
 source $VIMRUNTIME/menu.vim
-language messages en_US.utf-8
+language en_US.UTF-8
 
 " length of tab indentation 
 set tabstop=4
