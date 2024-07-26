@@ -2,12 +2,7 @@
 # Path of this file ~/.config/fish/config.fish
 # @zomby7e
 
-if status is-interactive
-    # Commands to run in interactive sessions can go here
-    # No content yet
-end
-
-# varribles
+# varribles for this file
 set need_install # packages that need to be installed
 set install_hint 1 # 1 on, 0 off
 
@@ -58,15 +53,42 @@ function fish_greeting
 end
 
 # Web search engines
-# TODO: If FF not installed turn to Chromium
 function google
-    set -l query (string join " " $argv)
-    firefox "https://www.google.com/search?q=$query"
+    if test (count $argv) -eq 0
+        echo "Usage: google <search term>"
+        return 1
+    end
+
+    set -l query (string join " " $argv | string replace " " "%20")
+    set -l url "https://www.google.com/search?q=$query"
+    
+    xdg-open $url
 end
 
+# YouTube
 function youtube
-    set -l query (string join " " $argv)
-    firefox "https://www.youtube.com/results?search_query=$query"
+    if test (count $argv) -eq 0
+        echo "Usage: youtube <search term>"
+        return 1
+    end
+
+    set -l query (string join " " $argv | string replace " " "%20")
+    set -l url "https://www.youtube.com/results?search_query=$query"
+
+    xdg-open $url
+end
+
+# Wikipedia
+function wiki
+    if test (count $argv) -eq 0
+        echo "Usage: wiki <search term>"
+        return 1
+    end
+
+    set -l query (string join " " $argv | string replace " " "%20")
+    set -l url "https://en.wikipedia.org/wiki/Special:Search?search=$query"
+
+    xdg-open $url
 end
 
 # Get basic system information
@@ -74,37 +96,21 @@ function basicinfo
     printf "User@Host: %s@%s\n" $USER (hostname)
     # Get distro name through the file.
     if test -f /etc/os-release
-        set distro_name (grep -E "^PRETTY_NAME|^NAME" /etc/os-release | awk -F "=" '{print $2}' | tr -d '"' | head -n1)
-        if test -n "$distro_name"
-        else
-            set distro_name "Other Distro"
-        end
+        set -l distro_name (grep '^NAME=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+        set -l distro_version (grep '^VERSION=' /etc/os-release | cut -d'=' -f2 | tr -d '"')
+        echo "Distro: $distro_name $distro_version"
     else
-        set distro_name "Other Distro"
+        echo "Unable to retrieve distribution information."
     end
-    printf "Distro: %s\n" $distro_name
-    printf "OS Type: %s\n" (uname -sm)
-    printf "Kernel Version: %s\n" (uname -r)
+    printf "Kernel Info: %s\n" (uname -sr)
+    printf "Platform: %s\n" (uname -m)
     set uptime (uptime -p)
     set uptime (string replace "up " "" $uptime)
     printf "Uptime: %s\n" $uptime
     printf "Shell: %s\n" (basename $SHELL)
     set cpu_name (cat /proc/cpuinfo | grep "model name" | uniq | sed "s/.*: //")
-    printf "CPU: %s\n" $cpu_name
-    # Get GPU name
-    if test (uname -s) = "Linux"
-        set gpu_driver (lspci -nnk | awk -F ': ' \
-			          '/Display|3D|VGA/{nr[NR+2]}; NR in nr {printf $2 ", "; exit}')
-        set gpu_driver (string replace "," "" $gpu_driver)
 
-        if string match -q "nvidia" $gpu_driver
-            set gpu_driver (cat /proc/driver/nvidia/version)
-            set gpu_driver (string replace --regex ".*Module  " "" $gpu_driver)
-            set gpu_driver (string replace --regex "  .*" "" $gpu_driver)
-            set gpu_driver "NVIDIA $gpu_driver"
-        end
-        printf "GPU: %s\n" $gpu_driver
-    end
+    # Get memory info
     switch (uname -s)
     case 'Linux'
 	    set mem_info (free -h | grep Mem)
@@ -122,4 +128,44 @@ function basicinfo
     case '*'
         :
     end
+    #TODO: GPU modal nema, SWAP info, Disk usage
+end
+
+# Set Network proxy
+function setproxy
+    set -l host
+    set -l port
+
+    if test (count $argv) -eq 1
+        set -l proxy (string split ":" $argv[1])
+        set host $proxy[1]
+        set port $proxy[2]
+    else
+        echo "Host name / IP address:"
+        read host
+        echo "Port:"
+        read port
+    end
+
+    if test -z "$host" -o -z "$port"
+        echo "Invalid input"
+        return 1
+    end
+
+    set -gx http_proxy "http://$host:$port"
+    set -gx https_proxy "http://$host:$port"
+    set -gx ftp_proxy "http://$host:$port"
+    set -gx no_proxy "localhost,127.0.0.1"
+
+    echo "Network proxy has been set to: $host:$port"
+end
+
+# Unset proxy
+function unsetproxy
+    set -e http_proxy
+    set -e https_proxy
+    set -e ftp_proxy
+    set -e no_proxy
+
+    echo "Network proxy has been unset"
 end
