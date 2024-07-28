@@ -165,7 +165,6 @@ Plug 'preservim/nerdcommenter'
 Plug 'dense-analysis/ale'
 Plug 'vim-airline/vim-airline'
 Plug 'jiangmiao/auto-pairs'
-Plug 'preservim/nerdcommenter'
 call plug#end()
 
 " ALE

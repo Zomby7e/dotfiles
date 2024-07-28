@@ -5,12 +5,13 @@
 # varribles for this file
 set need_install # packages that need to be installed
 set install_hint 1 # 1 on, 0 off
+set translate_manual_to "zh_TW" # First language for man
 
 # Editor config
 if command -v kate >/dev/null
     set -x VISUAL "kate"
 else
-    set need_install $need_install "kate "
+    set need_install "$need_install""kate "
 end
 
 if command -v vim >/dev/null
@@ -18,7 +19,7 @@ if command -v vim >/dev/null
     alias vi vim
     alias vimfish "vim ~/.config/fish/config.fish"
 else
-    set need_install $need_install "vim "
+    set need_install "$need_install""vim "
 end
 
 # Command line tools
@@ -26,7 +27,7 @@ end
 if command -v bat >/dev/null
     alias cat bat
 else
-    set need_install $need_install "bat "
+    set need_install "$need_install""bat "
 end
 # Better less
 if command -v source-highlight >/dev/null
@@ -34,20 +35,20 @@ if command -v source-highlight >/dev/null
     export LESSOPEN="| $src_hl_path %s"
     export LESS=' -R '
 else
-    set need_install $need_install "source-highlight "
+    set need_install "$need_install""source-highlight "
 end
 
 # Fish config
 function fish_greeting
-    printf "🐟 opened @ \033[0;92m%s \033[0m\n" (date "+%H:%M %m/%d/%Y")
+    printf "Fish opened @ \033[0;92m%s \033[0m\n" (date "+%H:%M %m/%d/%Y")
     if string length --quiet $need_install
         and test "$install_hint" = "1"
         printf "There are some packages missing, install them for better experience:\n%s\n" $need_install
-        printf "Edit your 🐟 config file to disable this hint, Enter `vimfish`.\n"
+        printf "Edit your fish config file to disable this hint, Enter `vimfish`.\n"
     end
     set current_shell (basename $SHELL)
     if not test "$current_shell" = "fish"
-        printf "Your default shell is not 🐟, if you need enter `ineedfish`\n"
+        printf "Your default shell is not fish, if you need enter `ineedfish`\n"
         alias ineedfish 'chsh -s (which fish)'
     end
 end
@@ -168,4 +169,13 @@ function unsetproxy
     set -e no_proxy
 
     echo "Network proxy has been unset"
+end
+
+# Translated manual
+function tman
+    if man -M /usr/share/man/$translate_manual_to "$argv[1]" > /dev/null 2>&1
+        man -M /usr/share/man/$translate_manual_to "$argv"
+    else
+        man "$argv"
+    end
 end
