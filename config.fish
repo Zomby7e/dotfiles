@@ -24,10 +24,10 @@ if status is-interactive
 
 	# LS Delux (better ls)
 	if type -q lsd
-		abbr -a ls 'lsd'
-		abbr -a ll 'lsd -l'
-		abbr -a la 'lsd -la'
-		abbr -a lt 'lsd --tree'
+		abbr -a ls 'lsd --icon never'
+		abbr -a ll 'lsd -l --icon never'
+		abbr -a la 'lsd -la --icon never'
+		abbr -a lt 'lsd --tree --icon never'
 	end
 
 	# Use btop instead of top
