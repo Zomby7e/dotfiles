@@ -51,6 +51,39 @@ if status is-interactive
 		end
 	end
 
+	# mkdir then cd
+	function mkcd
+		if test (count $argv) -eq 0
+			echo "Usage: mkcd <directory>"
+			return 1
+		end
+
+		set dir $argv[1]
+
+		if not test -d "$dir"
+			mkdir -p "$dir"
+		end
+
+		cd "$dir"
+	end
+
+	# Show alias/abbr, or executable file location
+	function whichcmd
+		functions $argv[1]; and return
+		type -a $argv[1]
+	end
+
+	# List the ports the system is listening on
+	function ports
+		if type -q ss
+			ss -tuln
+		else if type -q netstat
+			netstat -tuln
+		else
+			echo "No netstat or ss available."
+		end
+	end
+
 	# Set Network proxy
 	function setproxy
 		set -l host
