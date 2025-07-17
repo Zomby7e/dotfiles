@@ -7,9 +7,11 @@
 set nu
 set cul
 set cuc
+hi CursorLine cterm=NONE ctermbg=darkgray
 
-" Highlight search
+" Highlight search, press escape to cancel
 set hlsearch
+nnoremap <silent> <Esc> :nohlsearch<CR>
 
 " Enable Mouse"
 set mouse=a
@@ -138,6 +140,34 @@ for ext in supported_file_types
 	execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
 endfor
 
+" Save cursor position
+if has("autocmd")
+	autocmd BufReadPost * \
+		if line("'\"") > 0 && line("'\"") <= line("$") | \
+			exe "normal! g`\"" | \
+		endif
+endif
+
+" Auto make directory when not exists
+function! s:MkdirIfNotExist()
+	let dir = expand('%:p:h')
+	if !isdirectory(dir)
+		call mkdir(dir, 'p')
+	endif
+endfunction
+autocmd BufWritePre * call s:MkdirIfNotExist()
+
+" Enable system clipboard
+function! EnableClipboard()
+  if has('clipboard')
+    set clipboard+=unnamedplus
+    echom "System clipboard enabled"
+  else
+    echom "Your Vim does not support +clipboard"
+  endif
+endfunction
+command! EnableClipboard call EnableClipboard()
+
 " If backup, swap and undo folder not exists, create them
 if !isdirectory(expand("~/.vim/.backup"))
 	call mkdir(expand("~/.vim/.backup"), "p")
@@ -192,7 +222,9 @@ let g:ale_linters = {
 \	'rust': ['analyzer'],
 \	'python': ['pylint']
 \}
-let g:ale_rust_analyzer_executable="/home/zomby7e/bin/rust-analyzer"
+let g:ale_rust_analyzer_executable =
+		\ executable('rust-analyzer') ? 'rust-analyzer' :
+		\ (exists('$RUST_ANALYZER') ? expand('$RUST_ANALYZER') : expand('$HOME/.cargo/bin/rust-analyzer'))
 nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
 let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines'] }
 let g:rustfmt_autosave = 1
