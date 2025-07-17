@@ -1,5 +1,7 @@
 " user: @zomby7e
-" This config file needs vim-plug https://github.com/junegunn/vim-plug
+" This config file may use with or not:
+" vim-plug https://github.com/junegunn/vim-plug
+" CLI tools: curl, git, sudo
 
 " Line number and cursor location
 set nu
@@ -107,46 +109,46 @@ set guioptions-=L
 
 " Function: set shebangs
 function! SetShebang(lang)
-    let simple_shells = ['bash', 'fish', 'sh', 'csh', 'zsh']
-    let shebang = ''
-    if index(simple_shells, a:lang) != -1
-        let shebang = '#!/usr/bin/env ' . a:lang
-    elseif a:lang == 'py' || a:lang == 'python' || a:lang == 'python3'
-        let shebang = '#!/usr/bin/env python3'
-    elseif a:lang == 'pl' || a:lang == 'perl'
-        let shebang = '#!/usr/bin/env perl'
-    elseif a:lang == 'js' || a:lang == 'javascript' || a:lang == 'node' || a:lang == 'nodejs'
-        let shebang = '#!/usr/bin/env node'
-    endif
-    if shebang != ''
-        let first_line = getline(1)
-        if first_line =~? '^#!'
-            silent! execute '1delete'
-        endif
-        call append(0, shebang)
-    else
-        echo "Unknown language"
-    endif
+	let simple_shells = ['bash', 'fish', 'sh', 'csh', 'zsh']
+	let shebang = ''
+	if index(simple_shells, a:lang) != -1
+		let shebang = '#!/usr/bin/env ' . a:lang
+	elseif a:lang == 'py' || a:lang == 'python' || a:lang == 'python3'
+		let shebang = '#!/usr/bin/env python3'
+	elseif a:lang == 'pl' || a:lang == 'perl'
+		let shebang = '#!/usr/bin/env perl'
+	elseif a:lang == 'js' || a:lang == 'javascript' || a:lang == 'node' || a:lang == 'nodejs'
+		let shebang = '#!/usr/bin/env node'
+	endif
+	if shebang != ''
+		let first_line = getline(1)
+		if first_line =~? '^#!'
+			silent! execute '1delete'
+		endif
+		call append(0, shebang)
+	else
+		echo "Unknown language"
+	endif
 endfunction
 " Add a command named Shebang
 command! -nargs=1 Shebang call SetShebang(<f-args>)
 " Auto Add Shebang for new files
 let supported_file_types = ['py', 'sh', 'fish', 'pl', 'csh', 'zsh']
 for ext in supported_file_types
-    execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
+	execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
 endfor
 
 " If backup, swap and undo folder not exists, create them
 if !isdirectory(expand("~/.vim/.backup"))
-    call mkdir(expand("~/.vim/.backup"), "p")
+	call mkdir(expand("~/.vim/.backup"), "p")
 endif
 
 if !isdirectory(expand("~/.vim/.swp"))
-    call mkdir(expand("~/.vim/.swp"), "p")
+	call mkdir(expand("~/.vim/.swp"), "p")
 endif
 
 if !isdirectory(expand("~/.vim/.undo"))
-    call mkdir(expand("~/.vim/.undo"), "p")
+	call mkdir(expand("~/.vim/.undo"), "p")
 endif
 
 " Set History and folders
@@ -159,19 +161,36 @@ set undodir=~/.vim/.undo//
 let g:ale_completion_enabled = 1
 
 " Vim-Plug
-call plug#begin('~/.vim/plugged')
-Plug 'preservim/nerdtree'
-Plug 'preservim/nerdcommenter'
-Plug 'dense-analysis/ale'
-Plug 'vim-airline/vim-airline'
-Plug 'jiangmiao/auto-pairs'
-call plug#end()
+function! DefinePlugins()
+	call plug#begin('~/.vim/plugged')
+	Plug 'preservim/nerdtree'
+	Plug 'preservim/nerdcommenter'
+	Plug 'dense-analysis/ale'
+	Plug 'vim-airline/vim-airline'
+	Plug 'jiangmiao/auto-pairs'
+	call plug#end()
+endfunction
+
+" Check if vim-plug is installed
+let s:data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+if empty(glob(s:data_dir . '/autoload/plug.vim'))
+	function! PlugDeploy() abort
+		silent execute '!curl -fLo '.s:data_dir.'/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+		execute 'runtime autoload/plug.vim'
+		call DefinePlugins()
+		PlugInstall --sync | source $MYVIMRC
+	endfunction
+	" Enter `:PlugDeploy` to install plugins.
+	command! PlugDeploy call PlugDeploy()
+else
+	call DefinePlugins()
+endif
 
 " ALE
 set omnifunc=ale#completion#OmniFunc
 let g:ale_linters = {
-\   'rust': ['analyzer'],
-\   'python': ['pylint']
+\	'rust': ['analyzer'],
+\	'python': ['pylint']
 \}
 let g:ale_rust_analyzer_executable="/home/zomby7e/bin/rust-analyzer"
 nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
@@ -179,4 +198,3 @@ let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lin
 let g:rustfmt_autosave = 1
 " Set this. Airline will handle the rest.
 let g:airline#extensions#ale#enabled = 1
-
