@@ -37,15 +37,17 @@ source $VIMRUNTIME/delmenu.vim
 source $VIMRUNTIME/menu.vim
 language en_US.UTF-8
 
-" length of tab indentation 
+" Use real tabs
+set noexpandtab
+" length of tab indentation
 set tabstop=4
-" length of auto indentation 
+" length of auto indentation (by using >> <<)
 set shiftwidth=4
+" length of indentation when expandtab
+set softtabstop=4
 " Auto and smart indent
 set autoindent
 set smartindent
-" Use spaces instead of tabs
-set expandtab
 " Be smart when using tabs
 set smarttab
 
@@ -89,10 +91,6 @@ if has("gui_running")
 	set t_Co=256
 	set guitablabel=%M\ %t
 endif
-" Turn backup off
-" set nobackup
-" set nowb
-" set noswapfile
 
 " Use visual bell when error occurred
 set noerrorbells
@@ -142,10 +140,10 @@ endfor
 
 " Save cursor position
 if has("autocmd")
-	autocmd BufReadPost * \
-		if line("'\"") > 0 && line("'\"") <= line("$") | \
-			exe "normal! g`\"" | \
-		endif
+	autocmd BufReadPost *
+	\ if line("'\"") > 0 && line("'\"") <= line("$") |
+	\   exe "normal! g`\"" |
+	\ endif
 endif
 
 " Auto make directory when not exists
@@ -157,36 +155,61 @@ function! s:MkdirIfNotExist()
 endfunction
 autocmd BufWritePre * call s:MkdirIfNotExist()
 
-" Enable system clipboard
-function! EnableClipboard()
-  if has('clipboard')
-    set clipboard+=unnamedplus
-    echom "System clipboard enabled"
-  else
-    echom "Your Vim does not support +clipboard"
-  endif
+" Usage: :Indent tab 4 or :Indent space 2
+function! SetIndentStyle(style, width) abort
+	if a:style ==# 'tab'
+		set noexpandtab
+	elseif a:style ==# 'space'
+		set expandtab
+	else
+		echoerr "Invalid indent style: ".a:style
+	return
+	endif
+
+	let l:width = str2nr(a:width)
+	if l:width <= 0
+		echoerr "Invalid width: ".a:width
+		return
+	endif
+
+	execute 'set tabstop=' . l:width
+	execute 'set shiftwidth=' . l:width
+	execute 'set softtabstop=' . l:width
+
+	echom 'Indent style set to ' . a:style . ' with width ' . a:width
 endfunction
-command! EnableClipboard call EnableClipboard()
+command! -nargs=+ Indent call SetIndentStyle(<f-args>)
+
+" " Turn backup off
+" set nobackup
+" set nowb
+" set noswapfile
 
 " If backup, swap and undo folder not exists, create them
 if !isdirectory(expand("~/.vim/.backup"))
 	call mkdir(expand("~/.vim/.backup"), "p")
 endif
 
-if !isdirectory(expand("~/.vim/.swp"))
-	call mkdir(expand("~/.vim/.swp"), "p")
+if !isdirectory(expand("~/.vim/.swap"))
+	call mkdir(expand("~/.vim/.swap"), "p")
 endif
 
 if !isdirectory(expand("~/.vim/.undo"))
 	call mkdir(expand("~/.vim/.undo"), "p")
 endif
 
+" Enable persistent undo file
+if has('persistent_undo')
+  set undofile
+endif
+
 " Set History and folders
 set history=1000
 set backupdir=~/.vim/.backup//
-set directory=~/.vim/.swp//
+set directory=~/.vim/.swap//
 set undodir=~/.vim/.undo//
 
+" Before vim-plug
 " Enable ale auto completion before loaded it.
 let g:ale_completion_enabled = 1
 
@@ -198,9 +221,12 @@ function! DefinePlugins()
 	Plug 'dense-analysis/ale'
 	Plug 'vim-airline/vim-airline'
 	Plug 'jiangmiao/auto-pairs'
+	" Auto indent style
+	Plug 'tpope/vim-sleuth'		
 	call plug#end()
 endfunction
 
+" After vim-plug
 " Check if vim-plug is installed
 let s:data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
 if empty(glob(s:data_dir . '/autoload/plug.vim'))
