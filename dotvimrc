@@ -29,13 +29,17 @@ set showcmd
 
 " File encoding: utf8
 set encoding=utf-8
-set fileencodings=utf-8,chinese,latin-1,gbk,gb18030,gk2312
+set fileencodings=utf-8,gbk,gb18030,gb2312,latin1
 " Use Unix as the standard file type
 set ffs=unix,dos,mac
 " Avoid garbled text in menus and messages
 source $VIMRUNTIME/delmenu.vim
 source $VIMRUNTIME/menu.vim
-language en_US.UTF-8
+try
+	language messages en_US.UTF-8
+catch
+	language messages C
+endtry
 
 " Use real tabs
 set noexpandtab
@@ -222,7 +226,9 @@ function! DefinePlugins()
 	Plug 'vim-airline/vim-airline'
 	Plug 'jiangmiao/auto-pairs'
 	" Auto indent style
-	Plug 'tpope/vim-sleuth'		
+	Plug 'tpope/vim-sleuth'
+	Plug 'majutsushi/tagbar'
+	Plug 'tpope/vim-fugitive'
 	call plug#end()
 endfunction
 
@@ -246,8 +252,10 @@ endif
 set omnifunc=ale#completion#OmniFunc
 let g:ale_linters = {
 \	'rust': ['analyzer'],
-\	'python': ['pylint']
+\	'python': ['pylint'],
+\	'c': ['gcc']
 \}
+let g:ale_fixers = {'c': ['clang-format']}
 let g:ale_rust_analyzer_executable =
 		\ executable('rust-analyzer') ? 'rust-analyzer' :
 		\ (exists('$RUST_ANALYZER') ? expand('$RUST_ANALYZER') : expand('$HOME/.cargo/bin/rust-analyzer'))
