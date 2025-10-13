@@ -3,11 +3,20 @@
 " vim-plug https://github.com/junegunn/vim-plug
 " CLI tools: curl, git, sudo
 
+" No more E1187 (Failed to source defaults.vim
+if exists('$VIMRUNTIME')
+	silent! execute 'source' fnameescape($VIMRUNTIME . '/defaults.vim')
+endif
+
+" Disable modeline for safety
+set nomodeline
+
 " Line number and cursor location
 set nu
 set cul
 set cuc
 hi CursorLine cterm=NONE ctermbg=darkgray
+hi CursorColumn cterm=NONE ctermbg=darkgray
 
 " Highlight search, press escape to cancel
 set hlsearch
