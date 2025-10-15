@@ -147,9 +147,12 @@ endfunction
 command! -nargs=1 Shebang call SetShebang(<f-args>)
 " Auto Add Shebang for new files
 let supported_file_types = ['py', 'sh', 'fish', 'pl', 'csh', 'zsh']
-for ext in supported_file_types
-	execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
-endfor
+augroup shebang_insert
+	autocmd!
+	for ext in supported_file_types
+		execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
+	endfor
+augroup END
 
 " Save cursor position
 if has("autocmd")
@@ -158,15 +161,6 @@ if has("autocmd")
 	\   exe "normal! g`\"" |
 	\ endif
 endif
-
-" Auto make directory when not exists
-function! s:MkdirIfNotExist()
-	let dir = expand('%:p:h')
-	if !isdirectory(dir)
-		call mkdir(dir, 'p')
-	endif
-endfunction
-autocmd BufWritePre * call s:MkdirIfNotExist()
 
 " Usage: :Indent tab 4 or :Indent space 2
 function! SetIndentStyle(style, width) abort
@@ -199,17 +193,18 @@ command! -nargs=+ Indent call SetIndentStyle(<f-args>)
 " set noswapfile
 
 " If backup, swap and undo folder not exists, create them
-if !isdirectory(expand("~/.vim/.backup"))
-	call mkdir(expand("~/.vim/.backup"), "p")
-endif
+function! s:MkdirIfNotExist(path)
+    if !isdirectory(expand(a:path))
+        call mkdir(expand(a:path), 'p')
+    endif
+endfunction
 
-if !isdirectory(expand("~/.vim/.swap"))
-	call mkdir(expand("~/.vim/.swap"), "p")
-endif
-
-if !isdirectory(expand("~/.vim/.undo"))
-	call mkdir(expand("~/.vim/.undo"), "p")
-endif
+augroup auto_mkdir
+    autocmd!
+    autocmd VimEnter * call s:MkdirIfNotExist('~/.vim/.backup')
+    autocmd VimEnter * call s:MkdirIfNotExist('~/.vim/.swap')
+    autocmd VimEnter * call s:MkdirIfNotExist('~/.vim/.undo')
+augroup END
 
 " Enable persistent undo file
 if has('persistent_undo')
@@ -221,10 +216,6 @@ set history=1000
 set backupdir=~/.vim/.backup//
 set directory=~/.vim/.swap//
 set undodir=~/.vim/.undo//
-
-" Before vim-plug
-" Enable ale auto completion before loaded it.
-let g:ale_completion_enabled = 1
 
 " Vim-Plug
 function! DefinePlugins()
@@ -244,7 +235,7 @@ endfunction
 
 " After vim-plug
 " Check if vim-plug is installed
-let s:data_dir = has('nvim') ? stdpath('data') . '/site' : '~/.vim'
+let s:data_dir = has('nvim') ? stdpath('data') . '/site' : expand('~/.vim')
 if empty(glob(s:data_dir . '/autoload/plug.vim'))
 	function! PlugDeploy() abort
 		silent execute '!curl -fLo '.s:data_dir.'/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
@@ -289,17 +280,28 @@ if has('python3')
 	let g:ycm_enable_diagnostic_signs = 0
 	let g:ycm_use_clangd = 1
 
-	set omnifunc=ycm#OmniFunc
-	nnoremap gd :YcmCompleter GoToDefinitionElseDeclaration<CR>
+	" Use YCM for completion
+	augroup completion_ycm
+		autocmd!
+		autocmd FileType c,cpp,python,rust,go,bash,fish,sh setlocal omnifunc=ycm#OmniFunc
+	augroup END
+	nnoremap <leader>gd :YcmCompleter GoToDefinitionElseDeclaration<CR>
 	nnoremap <C-LeftMouse> :YcmCompleter GoToDefinitionElseDeclaration<CR>
 else
 	" No Python3: Use ALE completion + built-in fallback
 	let g:ale_completion_enabled = 1
 	if exists('*ale#completion#OmniFunc')
-		set omnifunc=ale#completion#OmniFunc
+	    augroup completion_fallback
+	        autocmd!
+	        autocmd FileType * setlocal omnifunc=ale#completion#OmniFunc
+	    augroup END
 	else
-		set omnifunc=syntaxcomplete#Complete
+	    augroup completion_fallback
+	        autocmd!
+	        autocmd FileType * setlocal omnifunc=syntaxcomplete#Complete
+	    augroup END
 	endif
-	nnoremap gd :ALEGoToDefinition<CR>
+	nnoremap <leader>gd :ALEGoToDefinition<CR>
 	nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
 endif
+
