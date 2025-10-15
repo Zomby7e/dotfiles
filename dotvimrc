@@ -3,7 +3,7 @@
 " vim-plug https://github.com/junegunn/vim-plug
 " CLI tools: curl, git, sudo
 
-" No more E1187 (Failed to source defaults.vim
+" No more E1187 (Failed to source defaults.vim)
 if exists('$VIMRUNTIME')
 	silent! execute 'source' fnameescape($VIMRUNTIME . '/defaults.vim')
 endif
@@ -99,7 +99,7 @@ set lazyredraw
 set magic
 " Set extra options when running in GUI mode
 if has("gui_running")
-	set guioptions-=T
+	set guioptions-=Ts
 	set guioptions-=e
 	set t_Co=256
 	set guitablabel=%M\ %t
@@ -238,6 +238,7 @@ function! DefinePlugins()
 	Plug 'tpope/vim-sleuth'
 	Plug 'majutsushi/tagbar'
 	Plug 'tpope/vim-fugitive'
+	Plug 'ycm-core/YouCompleteMe'
 	call plug#end()
 endfunction
 
@@ -257,19 +258,46 @@ else
 	call DefinePlugins()
 endif
 
-" ALE
-set omnifunc=ale#completion#OmniFunc
+" ----------------------------
+"  ALE + YCM Adaptive Config
+" ----------------------------
+
+" ---- General ALE Configuration ----
 let g:ale_linters = {
-\	'rust': ['analyzer'],
-\	'python': ['pylint'],
-\	'c': ['gcc']
+\ 'c': ['clangd'],
+\ 'cpp': ['clangd'],
+\ 'rust': ['analyzer'],
 \}
-let g:ale_fixers = {'c': ['clang-format']}
-let g:ale_rust_analyzer_executable =
-		\ executable('rust-analyzer') ? 'rust-analyzer' :
-		\ (exists('$RUST_ANALYZER') ? expand('$RUST_ANALYZER') : expand('$HOME/.cargo/bin/rust-analyzer'))
-nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
-let g:ale_fixers = { 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines'] }
-let g:rustfmt_autosave = 1
-" Set this. Airline will handle the rest.
+let g:ale_fixers = {
+\ 'c': ['clang-format'],
+\ 'cpp': ['clang-format'],
+\ 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines']
+\}
+let g:ale_set_quickfix = 1
+let g:ale_open_list = 0
 let g:airline#extensions#ale#enabled = 1
+
+" ---- Switch completion system based on Python3 support ----
+if has('python3')
+	" Python3: Use YCM for main completion + ALE for diagnostics
+	let g:ale_completion_enabled = 0
+
+	let g:ycm_auto_trigger = 1
+	let g:ycm_autoclose_preview_window_after_completion = 1
+	let g:ycm_confirm_extra_conf = 0
+	let g:ycm_show_diagnostics_ui = 0
+	let g:ycm_enable_diagnostic_signs = 0
+	let g:ycm_use_clangd = 1
+
+	set omnifunc=ycm#OmniFunc
+	nnoremap <C-LeftMouse> :YcmCompleter GoToDefinitionElseDeclaration<CR>
+else
+	" No Python3: Use ALE completion + built-in fallback
+	let g:ale_completion_enabled = 1
+	set omnifunc=ale#completion#OmniFunc
+
+	if exists('&omnifunc') && &omnifunc == ''
+	set omnifunc=syntaxcomplete#Complete
+	endif
+	nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
+endif
