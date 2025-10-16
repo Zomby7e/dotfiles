@@ -229,7 +229,9 @@ function! DefinePlugins()
 	Plug 'tpope/vim-sleuth'
 	Plug 'majutsushi/tagbar'
 	Plug 'tpope/vim-fugitive'
-	Plug 'ycm-core/YouCompleteMe'
+	if has('python3')
+		Plug 'ycm-core/YouCompleteMe'
+	endif
 	call plug#end()
 endfunction
 
