@@ -3,7 +3,7 @@ set -e
 
 debian_postinstall() {
     # List of desired packages
-    packages=(vim git bat source-highlight duf fd-find lsd qalc ncdu btop curl wget unar)
+    packages=(vim git bat source-highlight duf fd-find lsd qalc ncdu btop curl wget unar stow)
     to_install=()
     dry_run=false
 

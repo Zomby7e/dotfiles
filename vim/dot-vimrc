@@ -1,0 +1,309 @@
+" user: @zomby7e
+" This config file may use with or not:
+" vim-plug https://github.com/junegunn/vim-plug
+" CLI tools: curl, git, sudo
+
+" No more E1187 (Failed to source defaults.vim)
+if exists('$VIMRUNTIME')
+	silent! execute 'source' fnameescape($VIMRUNTIME . '/defaults.vim')
+endif
+
+" Disable modeline for safety
+set nomodeline
+
+" Line number and cursor location
+set nu
+set cul
+set cuc
+hi CursorLine cterm=NONE ctermbg=darkgray
+hi CursorColumn cterm=NONE ctermbg=darkgray
+
+" Highlight search, press escape to cancel
+set hlsearch
+nnoremap <silent> <Esc> :nohlsearch<CR>
+
+" Enable Mouse"
+set mouse=a
+set selection=exclusive
+set selectmode=mouse,key
+
+" Don't compat vi
+set nocompatible
+" Enable syntax highlighting
+syntax enable
+" Always show insert or command mode
+set showmode
+" Always show command
+set showcmd
+
+" File encoding: utf8
+set encoding=utf-8
+set fileencodings=utf-8,gbk,gb18030,gb2312,latin1
+" Use Unix as the standard file type
+set ffs=unix,dos,mac
+" Avoid garbled text in menus and messages
+source $VIMRUNTIME/delmenu.vim
+source $VIMRUNTIME/menu.vim
+try
+	language messages en_US.UTF-8
+catch
+	language messages C
+endtry
+
+" Use real tabs
+set noexpandtab
+" length of tab indentation
+set tabstop=4
+" length of auto indentation (by using >> <<)
+set shiftwidth=4
+" length of indentation when expandtab
+set softtabstop=4
+" Auto and smart indent
+set autoindent
+set smartindent
+" Be smart when using tabs
+set smarttab
+
+" Show matches for brackets
+set showmatch
+" Show tabs and spaces at end of lines
+set listchars=tab:»\ ,trail:·,nbsp:_
+set list
+" Show current cursor location and status bar
+set ruler
+set laststatus=2
+" Enable filetype detection plugin and indent
+filetype plugin indent on
+" Set to auto read when a file is changed from the outside
+set autoread
+au FocusGained,BufEnter * checktime
+" :W sudo saves the file
+" (useful for handling the permission-denied error)
+command! W execute 'w !sudo tee % > /dev/null' <bar> edit!
+" Turn on the Wild menu
+set wildmenu
+set wildmode=longest:list,full
+" Height of the command bar
+set cmdheight=1
+" A buffer becomes hidden when it is abandoned
+set hid
+" Ignore case when searching (to disable, use 'set noignorecase')
+set ignorecase
+" When searching try to be smart about cases
+set smartcase
+" Makes search act like search in modern browsers
+set incsearch
+" Don't redraw while executing macros (good performance config)
+set lazyredraw
+" For regular expressions turn magic on
+set magic
+" Set extra options when running in GUI mode
+if has("gui_running")
+	set guioptions-=Ts
+	set guioptions-=e
+	set t_Co=256
+	set guitablabel=%M\ %t
+endif
+
+" Use visual bell when error occurred
+set noerrorbells
+"set visualbell
+
+" Let 'tl' toggle between this and the last accessed tab
+let g:lasttab = 1
+nmap <leader>tl :exe "tabn ".g:lasttab<CR>
+au TabLeave * let g:lasttab = tabpagenr()
+
+" Disable scrollbars
+set guioptions-=r
+set guioptions-=R
+set guioptions-=l
+set guioptions-=L
+
+" Function: set shebangs
+function! SetShebang(lang)
+	let simple_shells = ['bash', 'fish', 'sh', 'csh', 'zsh']
+	let shebang = ''
+	if index(simple_shells, a:lang) != -1
+		let shebang = '#!/usr/bin/env ' . a:lang
+	elseif a:lang == 'py' || a:lang == 'python' || a:lang == 'python3'
+		let shebang = '#!/usr/bin/env python3'
+	elseif a:lang == 'pl' || a:lang == 'perl'
+		let shebang = '#!/usr/bin/env perl'
+	elseif a:lang == 'js' || a:lang == 'javascript' || a:lang == 'node' || a:lang == 'nodejs'
+		let shebang = '#!/usr/bin/env node'
+	endif
+	if shebang != ''
+		let first_line = getline(1)
+		if first_line =~? '^#!'
+			silent! execute '1delete'
+		endif
+		call append(0, shebang)
+	else
+		echo "Unknown language"
+	endif
+endfunction
+" Add a command named Shebang
+command! -nargs=1 Shebang call SetShebang(<f-args>)
+" Auto Add Shebang for new files
+let supported_file_types = ['py', 'sh', 'fish', 'pl', 'csh', 'zsh']
+augroup shebang_insert
+	autocmd!
+	for ext in supported_file_types
+		execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
+	endfor
+augroup END
+
+" Save cursor position
+if has("autocmd")
+	autocmd BufReadPost *
+	\ if line("'\"") > 0 && line("'\"") <= line("$") |
+	\   exe "normal! g`\"" |
+	\ endif
+endif
+
+" Usage: :Indent tab 4 or :Indent space 2
+function! SetIndentStyle(style, width) abort
+	if a:style ==# 'tab'
+		set noexpandtab
+	elseif a:style ==# 'space'
+		set expandtab
+	else
+		echoerr "Invalid indent style: ".a:style
+	return
+	endif
+
+	let l:width = str2nr(a:width)
+	if l:width <= 0
+		echoerr "Invalid width: ".a:width
+		return
+	endif
+
+	execute 'set tabstop=' . l:width
+	execute 'set shiftwidth=' . l:width
+	execute 'set softtabstop=' . l:width
+
+	echom 'Indent style set to ' . a:style . ' with width ' . a:width
+endfunction
+command! -nargs=+ Indent call SetIndentStyle(<f-args>)
+
+" " Turn backup off
+" set nobackup
+" set nowb
+" set noswapfile
+
+" If backup, swap and undo folder not exists, create them
+function! s:MkdirIfNotExist(path)
+    if !isdirectory(expand(a:path))
+        call mkdir(expand(a:path), 'p')
+    endif
+endfunction
+
+augroup auto_mkdir
+    autocmd!
+    autocmd VimEnter * call s:MkdirIfNotExist('~/.vim/.backup')
+    autocmd VimEnter * call s:MkdirIfNotExist('~/.vim/.swap')
+    autocmd VimEnter * call s:MkdirIfNotExist('~/.vim/.undo')
+augroup END
+
+" Enable persistent undo file
+if has('persistent_undo')
+  set undofile
+endif
+
+" Set History and folders
+set history=1000
+set backupdir=~/.vim/.backup//
+set directory=~/.vim/.swap//
+set undodir=~/.vim/.undo//
+
+" Vim-Plug
+function! DefinePlugins()
+	call plug#begin('~/.vim/plugged')
+	Plug 'preservim/nerdtree'
+	Plug 'preservim/nerdcommenter'
+	Plug 'dense-analysis/ale'
+	Plug 'vim-airline/vim-airline'
+	Plug 'jiangmiao/auto-pairs'
+	" Auto indent style
+	Plug 'tpope/vim-sleuth'
+	Plug 'majutsushi/tagbar'
+	Plug 'tpope/vim-fugitive'
+	if has('python3')
+		Plug 'ycm-core/YouCompleteMe'
+	endif
+	call plug#end()
+endfunction
+
+" After vim-plug
+" Check if vim-plug is installed
+let s:data_dir = has('nvim') ? stdpath('data') . '/site' : expand('~/.vim')
+if empty(glob(s:data_dir . '/autoload/plug.vim'))
+	function! PlugDeploy() abort
+		silent execute '!curl -fLo '.s:data_dir.'/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+		execute 'runtime autoload/plug.vim'
+		call DefinePlugins()
+		PlugInstall --sync | source $MYVIMRC
+	endfunction
+	" Enter `:PlugDeploy` to install plugins.
+	command! PlugDeploy call PlugDeploy()
+else
+	call DefinePlugins()
+endif
+
+" ----------------------------
+"  ALE + YCM Adaptive Config
+" ----------------------------
+
+" ---- General ALE Configuration ----
+let g:ale_linters = {
+\ 'c': ['clangd'],
+\ 'cpp': ['clangd'],
+\ 'rust': ['analyzer'],
+\}
+let g:ale_fixers = {
+\ 'c': ['clang-format'],
+\ 'cpp': ['clang-format'],
+\ 'rust': ['rustfmt', 'trim_whitespace', 'remove_trailing_lines']
+\}
+let g:ale_set_quickfix = 1
+let g:ale_open_list = 0
+let g:airline#extensions#ale#enabled = 1
+
+" ---- Switch completion system based on Python3 support ----
+if has('python3')
+	" Python3: Use YCM for main completion + ALE for diagnostics
+	let g:ale_completion_enabled = 0
+
+	let g:ycm_auto_trigger = 1
+	let g:ycm_autoclose_preview_window_after_completion = 1
+	let g:ycm_confirm_extra_conf = 0
+	let g:ycm_show_diagnostics_ui = 0
+	let g:ycm_enable_diagnostic_signs = 0
+	let g:ycm_use_clangd = 1
+
+	" Use YCM for completion
+	augroup completion_ycm
+		autocmd!
+		autocmd FileType c,cpp,python,rust,go,bash,fish,sh setlocal omnifunc=ycm#OmniFunc
+	augroup END
+	nnoremap <leader>gd :YcmCompleter GoToDefinitionElseDeclaration<CR>
+	nnoremap <C-LeftMouse> :YcmCompleter GoToDefinitionElseDeclaration<CR>
+else
+	" No Python3: Use ALE completion + built-in fallback
+	let g:ale_completion_enabled = 1
+	if exists('*ale#completion#OmniFunc')
+	    augroup completion_fallback
+	        autocmd!
+	        autocmd FileType * setlocal omnifunc=ale#completion#OmniFunc
+	    augroup END
+	else
+	    augroup completion_fallback
+	        autocmd!
+	        autocmd FileType * setlocal omnifunc=syntaxcomplete#Complete
+	    augroup END
+	endif
+	nnoremap <leader>gd :ALEGoToDefinition<CR>
+	nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
+endif
+
