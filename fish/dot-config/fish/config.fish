@@ -44,7 +44,10 @@ if status is-interactive
 
 	# Fish config
 	function fish_greeting
-		printf "Fish opened @ \033[0;92m%s \033[0m\n" (date "+%H:%M %m/%d/%Y")
+		echo -n "Fish opened @ "
+		set_color brgreen
+		echo (date "+%H:%M %m/%d/%Y")
+		set_color normal
 		if not test (basename $SHELL) = "fish"
 			printf "It looks like your default shell is not fish. Run `usefish` if you'd like to make fish your default.\n"
 			abbr --add usefish 'chsh -s (which fish)'
