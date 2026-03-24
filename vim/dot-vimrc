@@ -5,11 +5,12 @@
 
 " No more E1187 (Failed to source defaults.vim)
 if exists('$VIMRUNTIME')
-	silent! execute 'source' fnameescape($VIMRUNTIME . '/defaults.vim')
+        silent! execute 'source' fnameescape($VIMRUNTIME . '/defaults.vim')
 endif
 
 " Disable modeline for safety
 set nomodeline
+set modelines=0
 
 " Line number and cursor location
 set nu
@@ -45,9 +46,9 @@ set ffs=unix,dos,mac
 source $VIMRUNTIME/delmenu.vim
 source $VIMRUNTIME/menu.vim
 try
-	language messages en_US.UTF-8
+        language messages en_US.UTF-8
 catch
-	language messages C
+        language messages C
 endtry
 
 " Use real tabs
@@ -99,10 +100,10 @@ set lazyredraw
 set magic
 " Set extra options when running in GUI mode
 if has("gui_running")
-	set guioptions-=Ts
-	set guioptions-=e
-	set t_Co=256
-	set guitablabel=%M\ %t
+        set guioptions-=Ts
+        set guioptions-=e
+        set t_Co=256
+        set guitablabel=%M\ %t
 endif
 
 " Use visual bell when error occurred
@@ -122,68 +123,68 @@ set guioptions-=L
 
 " Function: set shebangs
 function! SetShebang(lang)
-	let simple_shells = ['bash', 'fish', 'sh', 'csh', 'zsh']
-	let shebang = ''
-	if index(simple_shells, a:lang) != -1
-		let shebang = '#!/usr/bin/env ' . a:lang
-	elseif a:lang == 'py' || a:lang == 'python' || a:lang == 'python3'
-		let shebang = '#!/usr/bin/env python3'
-	elseif a:lang == 'pl' || a:lang == 'perl'
-		let shebang = '#!/usr/bin/env perl'
-	elseif a:lang == 'js' || a:lang == 'javascript' || a:lang == 'node' || a:lang == 'nodejs'
-		let shebang = '#!/usr/bin/env node'
-	endif
-	if shebang != ''
-		let first_line = getline(1)
-		if first_line =~? '^#!'
-			silent! execute '1delete'
-		endif
-		call append(0, shebang)
-	else
-		echo "Unknown language"
-	endif
+        let simple_shells = ['bash', 'fish', 'sh', 'csh', 'zsh']
+        let shebang = ''
+        if index(simple_shells, a:lang) != -1
+                let shebang = '#!/usr/bin/env ' . a:lang
+        elseif a:lang == 'py' || a:lang == 'python' || a:lang == 'python3'
+                let shebang = '#!/usr/bin/env python3'
+        elseif a:lang == 'pl' || a:lang == 'perl'
+                let shebang = '#!/usr/bin/env perl'
+        elseif a:lang == 'js' || a:lang == 'javascript' || a:lang == 'node' || a:lang == 'nodejs'
+                let shebang = '#!/usr/bin/env node'
+        endif
+        if shebang != ''
+                let first_line = getline(1)
+                if first_line =~? '^#!'
+                        silent! execute '1delete'
+                endif
+                call append(0, shebang)
+        else
+                echo "Unknown language"
+        endif
 endfunction
 " Add a command named Shebang
 command! -nargs=1 Shebang call SetShebang(<f-args>)
 " Auto Add Shebang for new files
 let supported_file_types = ['py', 'sh', 'fish', 'pl', 'csh', 'zsh']
 augroup shebang_insert
-	autocmd!
-	for ext in supported_file_types
-		execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
-	endfor
+        autocmd!
+        for ext in supported_file_types
+                execute 'autocmd BufNewFile *.' . ext . ' call SetShebang("' . ext . '")'
+        endfor
 augroup END
 
 " Save cursor position
 if has("autocmd")
-	autocmd BufReadPost *
-	\ if line("'\"") > 0 && line("'\"") <= line("$") |
-	\   exe "normal! g`\"" |
-	\ endif
+        autocmd BufReadPost *
+        \ if line("'\"") > 0 && line("'\"") <= line("$") |
+        \   exe "normal! g`\"" |
+        \ endif
 endif
 
 " Usage: :Indent tab 4 or :Indent space 2
 function! SetIndentStyle(style, width) abort
-	if a:style ==# 'tab'
-		set noexpandtab
-	elseif a:style ==# 'space'
-		set expandtab
-	else
-		echoerr "Invalid indent style: ".a:style
-	return
-	endif
+        if a:style ==# 'tab'
+                set noexpandtab
+        elseif a:style ==# 'space'
+                set expandtab
+        else
+                echoerr "Invalid indent style: ".a:style
+        return
+        endif
 
-	let l:width = str2nr(a:width)
-	if l:width <= 0
-		echoerr "Invalid width: ".a:width
-		return
-	endif
+        let l:width = str2nr(a:width)
+        if l:width <= 0
+                echoerr "Invalid width: ".a:width
+                return
+        endif
 
-	execute 'set tabstop=' . l:width
-	execute 'set shiftwidth=' . l:width
-	execute 'set softtabstop=' . l:width
+        execute 'set tabstop=' . l:width
+        execute 'set shiftwidth=' . l:width
+        execute 'set softtabstop=' . l:width
 
-	echom 'Indent style set to ' . a:style . ' with width ' . a:width
+        echom 'Indent style set to ' . a:style . ' with width ' . a:width
 endfunction
 command! -nargs=+ Indent call SetIndentStyle(<f-args>)
 
@@ -219,36 +220,36 @@ set undodir=~/.vim/.undo//
 
 " Vim-Plug
 function! DefinePlugins()
-	call plug#begin('~/.vim/plugged')
-	Plug 'preservim/nerdtree'
-	Plug 'preservim/nerdcommenter'
-	Plug 'dense-analysis/ale'
-	Plug 'vim-airline/vim-airline'
-	Plug 'jiangmiao/auto-pairs'
-	" Auto indent style
-	Plug 'tpope/vim-sleuth'
-	Plug 'majutsushi/tagbar'
-	Plug 'tpope/vim-fugitive'
-	if has('python3')
-		Plug 'ycm-core/YouCompleteMe'
-	endif
-	call plug#end()
+        call plug#begin('~/.vim/plugged')
+        Plug 'preservim/nerdtree'
+        Plug 'preservim/nerdcommenter'
+        Plug 'dense-analysis/ale'
+        Plug 'vim-airline/vim-airline'
+        Plug 'jiangmiao/auto-pairs'
+        " Auto indent style
+        Plug 'tpope/vim-sleuth'
+        Plug 'majutsushi/tagbar'
+        Plug 'tpope/vim-fugitive'
+        Plug 'prabirshrestha/vim-lsp'
+        Plug 'prabirshrestha/asyncomplete.vim'
+        Plug 'prabirshrestha/asyncomplete-lsp.vim'
+        call plug#end()
 endfunction
 
 " After vim-plug
 " Check if vim-plug is installed
 let s:data_dir = has('nvim') ? stdpath('data') . '/site' : expand('~/.vim')
 if empty(glob(s:data_dir . '/autoload/plug.vim'))
-	function! PlugDeploy() abort
-		silent execute '!curl -fLo '.s:data_dir.'/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
-		execute 'runtime autoload/plug.vim'
-		call DefinePlugins()
-		PlugInstall --sync | source $MYVIMRC
-	endfunction
-	" Enter `:PlugDeploy` to install plugins.
-	command! PlugDeploy call PlugDeploy()
+        function! PlugDeploy() abort
+                silent execute '!curl -fLo '.s:data_dir.'/autoload/plug.vim --create-dirs https://raw.githubusercontent.com/junegunn/vim-plug/master/plug.vim'
+                execute 'runtime autoload/plug.vim'
+                call DefinePlugins()
+                PlugInstall --sync | source $MYVIMRC
+        endfunction
+        " Enter `:PlugDeploy` to install plugins.
+        command! PlugDeploy call PlugDeploy()
 else
-	call DefinePlugins()
+        call DefinePlugins()
 endif
 
 " ----------------------------
@@ -269,41 +270,37 @@ let g:ale_fixers = {
 let g:ale_set_quickfix = 1
 let g:ale_open_list = 0
 let g:airline#extensions#ale#enabled = 1
+let g:ale_completion_enabled = 0
 
-" ---- Switch completion system based on Python3 support ----
-if has('python3')
-	" Python3: Use YCM for main completion + ALE for diagnostics
-	let g:ale_completion_enabled = 0
+" ----------------------------
+" LSP CONFIG
+" ----------------------------
 
-	let g:ycm_auto_trigger = 1
-	let g:ycm_autoclose_preview_window_after_completion = 1
-	let g:ycm_confirm_extra_conf = 0
-	let g:ycm_show_diagnostics_ui = 0
-	let g:ycm_enable_diagnostic_signs = 0
-	let g:ycm_use_clangd = 1
-
-	" Use YCM for completion
-	augroup completion_ycm
-		autocmd!
-		autocmd FileType c,cpp,python,rust,go,bash,fish,sh setlocal omnifunc=ycm#OmniFunc
-	augroup END
-	nnoremap <leader>gd :YcmCompleter GoToDefinitionElseDeclaration<CR>
-	nnoremap <C-LeftMouse> :YcmCompleter GoToDefinitionElseDeclaration<CR>
-else
-	" No Python3: Use ALE completion + built-in fallback
-	let g:ale_completion_enabled = 1
-	if exists('*ale#completion#OmniFunc')
-	    augroup completion_fallback
-	        autocmd!
-	        autocmd FileType * setlocal omnifunc=ale#completion#OmniFunc
-	    augroup END
-	else
-	    augroup completion_fallback
-	        autocmd!
-	        autocmd FileType * setlocal omnifunc=syntaxcomplete#Complete
-	    augroup END
-	endif
-	nnoremap <leader>gd :ALEGoToDefinition<CR>
-	nnoremap <C-LeftMouse> :ALEGoToDefinition<CR>
+if executable('clangd')
+  augroup lsp_clangd
+    autocmd!
+    autocmd User lsp_setup call lsp#register_server({
+          \ 'name': 'clangd',
+          \ 'cmd': {server_info->['clangd']},
+          \ 'whitelist': ['c', 'cpp'],
+          \ })
+  augroup END
 endif
 
+" ----------------------------
+" COMPLETION (asyncomplete)
+" ----------------------------
+
+let g:asyncomplete_auto_popup = 1
+let g:asyncomplete_auto_completeopt = 0
+
+" Shortcut keys"
+nnoremap <leader>gd :LspDefinition<CR>
+nnoremap <leader>gi :LspImplementation<CR>
+nnoremap <leader>gt :LspTypeDefinition<CR>
+nnoremap <leader>gr :LspReferences<CR>
+nnoremap <C-LeftMouse> :LspDefinition<CR>
+nnoremap <leader>rn :LspRename<CR>
+nnoremap K :LspHover<CR>
+nnoremap <leader>e :LspDocumentDiagnostics<CR>
+autocmd BufWritePre *.c,*.h,*.cpp execute 'ALEFix'
